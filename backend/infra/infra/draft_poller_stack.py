@@ -4,6 +4,7 @@ from aws_cdk import Duration, Stack
 from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_events as events
 from aws_cdk import aws_events_targets as targets
+from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_lambda_python_alpha as python
 from constructs import Construct
@@ -13,6 +14,7 @@ INGESTION_DIR = Path(__file__).resolve().parent.parent.parent / "ingestion"
 DYNAMODB_TABLE_NAME = "fantasy-dashboard"
 SLEEPER_LEAGUE_ID = "1382277930977091584"
 SLEEPER_DRAFT_ID = "1382277932034039808"
+DRAFT_POLL_RULE_NAME = "fantasy-dashboard-draft-poll"
 
 
 class DraftPollerStack(Stack):
@@ -56,6 +58,21 @@ class DraftPollerStack(Stack):
         events.Rule(
             self,
             "DraftPollSchedule",
+            rule_name=DRAFT_POLL_RULE_NAME,
             schedule=events.Schedule.rate(Duration.minutes(15)),
             targets=[targets.LambdaFunction(poll_fn)],
+        )
+
+        # Lets the Lambda turn off its own schedule once the draft completes,
+        # instead of firing forever as a no-op. Built from a static rule name
+        # (not schedule.rule_arn) to avoid a Function <-> Rule dependency
+        # cycle: the Rule targets the Function, so the Function's role can't
+        # also depend on an attribute of the Rule.
+        rule_arn = self.format_arn(service="events", resource="rule", resource_name=DRAFT_POLL_RULE_NAME)
+        poll_fn.add_environment("EVENTBRIDGE_RULE_NAME", DRAFT_POLL_RULE_NAME)
+        poll_fn.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["events:DisableRule"],
+                resources=[rule_arn],
+            )
         )
