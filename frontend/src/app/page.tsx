@@ -4,29 +4,34 @@ import { useDraftPicks } from "@/lib/use-draft-picks";
 import { teamLabel } from "@/lib/team-label";
 import { playerImageUrl } from "@/lib/player-image";
 import { positionColorClass, POSITION_LEGEND } from "@/lib/position-colors";
-import { positionInRound } from "@/lib/draft-order";
+import { positionInRound, isTradedPick } from "@/lib/draft-order";
 import { Avatar } from "@/components/avatar";
 import type { DraftPick, Team } from "@/lib/draft-picks";
 
 export default function Home() {
-  const { picks, teams, error, lastUpdated } = useDraftPicks();
+  const { picks, teams, slotToRosterId, error, lastUpdated } = useDraftPicks();
 
-  const numSlots = teams?.length ?? 0;
+  const numSlots = Object.keys(slotToRosterId ?? {}).length;
   const teamsById = new Map((teams ?? []).map((team) => [team.roster_id, team]));
 
-  const slotToRosterId = new Map<number, number>();
   const pickByRoundAndSlot = new Map<string, DraftPick>();
   let maxRound = 0;
   for (const pick of picks ?? []) {
-    slotToRosterId.set(pick.draft_slot, pick.roster_id);
     pickByRoundAndSlot.set(`${pick.round}:${pick.draft_slot}`, pick);
     maxRound = Math.max(maxRound, pick.round);
   }
   const rounds = Array.from({ length: Math.max(maxRound, 1) }, (_, i) => i + 1);
   const slots = Array.from({ length: numSlots }, (_, i) => i + 1);
 
+  // slot_to_roster_id comes from the draft object, not the picks, so it's
+  // unaffected by mid-draft trades — the correct source for "whose column
+  // is this," unlike inferring it from whichever pick landed in that slot.
+  function slotOwner(slot: number): number | undefined {
+    return slotToRosterId?.[String(slot)];
+  }
+
   function columnHeader(slot: number): { label: string; team: Team | undefined } {
-    const rosterId = slotToRosterId.get(slot);
+    const rosterId = slotOwner(slot);
     const team = rosterId !== undefined ? teamsById.get(rosterId) : undefined;
     return { label: team ? teamLabel(team, rosterId!) : `Slot ${slot}`, team };
   }
@@ -49,7 +54,7 @@ export default function Home() {
           </p>
         )}
 
-        {(picks === null || teams === null) && !error && (
+        {(picks === null || teams === null || slotToRosterId === null) && !error && (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading picks…</p>
         )}
 
@@ -59,7 +64,7 @@ export default function Home() {
           </p>
         )}
 
-        {picks !== null && teams !== null && picks.length > 0 && numSlots > 0 && (
+        {picks !== null && teams !== null && slotToRosterId !== null && picks.length > 0 && numSlots > 0 && (
           <>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
               {POSITION_LEGEND.map((position) => (
@@ -104,6 +109,10 @@ export default function Home() {
                     }
                     const playerLabel = pick.player_name ?? "Unknown player";
                     const pickInRound = ((pick.pick_no - 1) % numSlots) + 1;
+                    const traded = isTradedPick(pick.roster_id, pick.draft_slot, slotToRosterId ?? {});
+                    const pickedByLabel = traded
+                      ? teamLabel(teamsById.get(pick.roster_id), pick.roster_id)
+                      : null;
                     return (
                       <div
                         key={`${round}-${slot}`}
@@ -121,6 +130,11 @@ export default function Home() {
                         <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
                           {round}.{pickInRound}
                         </span>
+                        {pickedByLabel && (
+                          <span className="truncate text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                            → {pickedByLabel}
+                          </span>
+                        )}
                       </div>
                     );
                   }),

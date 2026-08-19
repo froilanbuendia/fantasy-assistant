@@ -24,6 +24,9 @@ export type DraftPicksResponse = {
   draft_id: string;
   teams: Team[];
   picks: DraftPick[];
+  // Fixed slot->roster_id mapping from the draft object, unaffected by pick
+  // trades. Keys are slot numbers as strings (Sleeper's own JSON shape).
+  slot_to_roster_id: Record<string, number>;
 };
 
 export async function getDraftPicks(): Promise<DraftPicksResponse> {

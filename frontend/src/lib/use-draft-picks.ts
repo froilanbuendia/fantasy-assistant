@@ -8,6 +8,7 @@ const POLL_INTERVAL_MS = 30_000;
 export function useDraftPicks() {
   const [picks, setPicks] = useState<DraftPick[] | null>(null);
   const [teams, setTeams] = useState<Team[] | null>(null);
+  const [slotToRosterId, setSlotToRosterId] = useState<Record<string, number> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -18,11 +19,12 @@ export function useDraftPicks() {
       try {
         const data = await getDraftPicks();
         if (cancelled) return;
-        // A response could theoretically omit picks/teams (e.g. a stale
-        // deploy) despite the TS type — fall back to [] so callers only ever
-        // see "loading" (null) or a real array, never undefined.
+        // A response could theoretically omit fields (e.g. a stale deploy)
+        // despite the TS type — fall back so callers only ever see
+        // "loading" (null) or the real value, never undefined.
         setPicks(data.picks ?? []);
         setTeams(data.teams ?? []);
+        setSlotToRosterId(data.slot_to_roster_id ?? {});
         setError(null);
         setLastUpdated(new Date());
       } catch (err) {
@@ -39,5 +41,5 @@ export function useDraftPicks() {
     };
   }, []);
 
-  return { picks, teams, error, lastUpdated };
+  return { picks, teams, slotToRosterId, error, lastUpdated };
 }

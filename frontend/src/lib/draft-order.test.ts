@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { positionInRound } from "@/lib/draft-order";
+import { positionInRound, isTradedPick } from "@/lib/draft-order";
 
 describe("positionInRound", () => {
   it("keeps ascending slot order on odd rounds", () => {
@@ -18,5 +18,21 @@ describe("positionInRound", () => {
     const globalPickNo = 24;
     const pickInRound = ((globalPickNo - 1) % numSlots) + 1;
     expect(positionInRound(2, 1, numSlots)).toBe(pickInRound);
+  });
+});
+
+describe("isTradedPick", () => {
+  const slotToRosterId = { "1": 6, "2": 3, "3": 7 };
+
+  it("returns false when the pick's roster matches the slot's original owner", () => {
+    expect(isTradedPick(6, 1, slotToRosterId)).toBe(false);
+  });
+
+  it("returns true when the pick's roster differs from the slot's original owner", () => {
+    expect(isTradedPick(3, 1, slotToRosterId)).toBe(true);
+  });
+
+  it("returns false when the slot's owner is unknown (not yet loaded)", () => {
+    expect(isTradedPick(6, 99, slotToRosterId)).toBe(false);
   });
 });
