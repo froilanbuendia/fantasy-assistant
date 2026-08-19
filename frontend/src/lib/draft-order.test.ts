@@ -19,6 +19,29 @@ describe("positionInRound", () => {
     const pickInRound = ((globalPickNo - 1) % numSlots) + 1;
     expect(positionInRound(2, 1, numSlots)).toBe(pickInRound);
   });
+
+  it("repeats the previous round's order on the reversal round instead of flipping", () => {
+    // Verified against this league's real pick order: round 3 == round 2's
+    // order (descending), not the ascending order plain snake would give.
+    expect(positionInRound(3, 1, 12, 3)).toBe(positionInRound(2, 1, 12, 3));
+    expect(positionInRound(3, 12, 12, 3)).toBe(1);
+  });
+
+  it("resumes normal alternation after the reversal round", () => {
+    // Round 4 flips relative to round 3 (which itself repeated round 2).
+    expect(positionInRound(4, 1, 12, 3)).toBe(1);
+    expect(positionInRound(5, 1, 12, 3)).toBe(12);
+  });
+
+  it("matches real round 1-4 draft_slot order from this league's live picks", () => {
+    // Confirmed via GET /v1/draft/{id}/picks: round 1 ascending, round 2
+    // descending, round 3 repeats round 2, round 4 flips back to ascending.
+    const numSlots = 12;
+    expect([1, 2, 3].map((slot) => positionInRound(1, slot, numSlots))).toEqual([1, 2, 3]);
+    expect([1, 2, 3].map((slot) => positionInRound(2, slot, numSlots))).toEqual([12, 11, 10]);
+    expect([1, 2, 3].map((slot) => positionInRound(3, slot, numSlots))).toEqual([12, 11, 10]);
+    expect([1, 2, 3].map((slot) => positionInRound(4, slot, numSlots))).toEqual([1, 2, 3]);
+  });
 });
 
 describe("isTradedPick", () => {
