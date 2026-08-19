@@ -50,10 +50,10 @@ Lambda (entry: `fantasy_ingestion/lambda_handler.py`) every 15 minutes to poll t
 draft and write picks to DynamoDB. It reads/writes an *existing* `fantasy-dashboard`
 table via `Table.from_table_name` — the stack does not own or manage that table's
 lifecycle (created manually via AWS CLI), so `cdk destroy` cannot delete the data.
-`SLEEPER_LEAGUE_ID`/`SLEEPER_DRAFT_ID` are hardcoded as constants at the top of
-`backend/infra/infra/draft_poller_stack.py` (update there, not via `.env`, for anything
-that runs in Lambda). The Lambda's player-cache file lives in `/tmp` (`CACHE_DIR` env
-var), since `/var/task` is read-only.
+`SLEEPER_LEAGUE_ID`/`SLEEPER_DRAFT_ID`/`DYNAMODB_TABLE_NAME` are hardcoded as constants in
+`backend/infra/infra/config.py`, shared by every stack (update there, not via `.env`, for
+anything that runs in Lambda). The Lambda's player-cache file lives in `/tmp` (`CACHE_DIR`
+env var), since `/var/task` is read-only.
 
 ## Overview
 

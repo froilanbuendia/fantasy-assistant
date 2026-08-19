@@ -9,11 +9,10 @@ from aws_cdk import aws_lambda as _lambda
 from aws_cdk import aws_lambda_python_alpha as python
 from constructs import Construct
 
+from infra.config import DYNAMODB_TABLE_NAME, SLEEPER_DRAFT_ID, SLEEPER_LEAGUE_ID
+
 INGESTION_DIR = Path(__file__).resolve().parent.parent.parent / "ingestion"
 
-DYNAMODB_TABLE_NAME = "fantasy-dashboard"
-SLEEPER_LEAGUE_ID = "1382277930977091584"
-SLEEPER_DRAFT_ID = "1382277932034039808"
 DRAFT_POLL_RULE_NAME = "fantasy-dashboard-draft-poll"
 
 
