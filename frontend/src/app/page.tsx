@@ -4,12 +4,9 @@ import { useDraftPicks } from "@/lib/use-draft-picks";
 import { teamLabel } from "@/lib/team-label";
 import { playerImageUrl } from "@/lib/player-image";
 import { positionColorClass, POSITION_LEGEND } from "@/lib/position-colors";
+import { positionInRound } from "@/lib/draft-order";
 import { Avatar } from "@/components/avatar";
 import type { DraftPick, Team } from "@/lib/draft-picks";
-
-function positionInRound(round: number, slot: number, numSlots: number): number {
-  return round % 2 === 1 ? slot : numSlots - slot + 1;
-}
 
 export default function Home() {
   const { picks, teams, error, lastUpdated } = useDraftPicks();
