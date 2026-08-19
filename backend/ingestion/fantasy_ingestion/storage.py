@@ -49,3 +49,14 @@ def put_draft_pick(pick: dict) -> None:
         **pick,
     }
     _get_table().put_item(Item=item)
+
+
+def put_team(team: dict) -> None:
+    """Write a resolved team/manager item, stored under the same league
+    partition as its draft picks (SK prefix TEAM# instead of DRAFT#)."""
+    item = {
+        "PK": f"LEAGUE#{team['league_id']}",
+        "SK": f"TEAM#{team['roster_id']:04d}#META",
+        **team,
+    }
+    _get_table().put_item(Item=item)

@@ -2,7 +2,7 @@ import os
 
 import boto3
 
-from fantasy_ingestion import sleeper_client, storage
+from fantasy_ingestion import sleeper_client, storage, sync_teams
 from fantasy_ingestion.config import SLEEPER_DRAFT_ID, SLEEPER_LEAGUE_ID
 from fantasy_ingestion.poll_draft import poll_once
 
@@ -17,6 +17,7 @@ def _disable_own_schedule() -> None:
 
 def handler(event, context):
     draft = sleeper_client.get_draft(SLEEPER_DRAFT_ID)
+    sync_teams.sync_teams()
 
     if draft["status"] == "complete":
         print("Draft complete, skipping poll. Switch to roster/matchup polling (Phase 1b).")

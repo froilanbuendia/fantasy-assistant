@@ -25,5 +25,9 @@ def get_league_users(league_id: str) -> list[dict]:
     return _get(f"/league/{league_id}/users")
 
 
+def get_league_rosters(league_id: str) -> list[dict]:
+    return _get(f"/league/{league_id}/rosters")
+
+
 def get_all_players() -> dict:
     return _get("/players/nfl")

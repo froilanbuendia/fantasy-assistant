@@ -35,3 +35,22 @@ def get_draft_picks(league_id: str, draft_id: str) -> list[dict]:
         if "LastEvaluatedKey" not in response:
             return picks
         query_kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
+
+
+def get_teams(league_id: str) -> list[dict]:
+    """All team/manager metadata stored for this league, in ascending
+    roster_id order (the zero-padded SK sorts that way already)."""
+    table = _get_table()
+    query_kwargs = {
+        "KeyConditionExpression": Key("PK").eq(f"LEAGUE#{league_id}") & Key("SK").begins_with("TEAM#"),
+    }
+
+    teams: list[dict] = []
+    while True:
+        response = table.query(**query_kwargs)
+        teams.extend(
+            {k: v for k, v in item.items() if k not in _INTERNAL_KEYS} for item in response["Items"]
+        )
+        if "LastEvaluatedKey" not in response:
+            return teams
+        query_kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
