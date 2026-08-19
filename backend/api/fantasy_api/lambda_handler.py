@@ -14,8 +14,18 @@ def _json_default(obj):
 def handler(event, context):
     picks = storage.get_draft_picks(SLEEPER_LEAGUE_ID, SLEEPER_DRAFT_ID)
 
+    # league_id/draft_id are identical on every pick (this endpoint only ever
+    # serves one draft) — lift them out once instead of repeating per pick.
+    picks = [{k: v for k, v in pick.items() if k not in ("league_id", "draft_id")} for pick in picks]
+
+    body = {
+        "league_id": SLEEPER_LEAGUE_ID,
+        "draft_id": SLEEPER_DRAFT_ID,
+        "picks": picks,
+    }
+
     return {
         "statusCode": 200,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps({"picks": picks}, default=_json_default),
+        "body": json.dumps(body, default=_json_default),
     }
