@@ -16,8 +16,11 @@ def resolve_teams(rosters: list[dict], users: list[dict]) -> list[dict]:
                 "league_id": SLEEPER_LEAGUE_ID,
                 "roster_id": roster["roster_id"],
                 "owner_user_id": owner_id,
-                "display_name": user.get("display_name"),
-                "team_name": (user.get("metadata") or {}).get("team_name"),
+                # `or None` normalizes an empty string the same as a missing
+                # value (Sleeper returns either), matching resolve_pick's
+                # `full_name or None` for player_name.
+                "display_name": user.get("display_name") or None,
+                "team_name": (user.get("metadata") or {}).get("team_name") or None,
                 "avatar_url": f"https://sleepercdn.com/avatars/thumbs/{avatar_id}" if avatar_id else None,
             }
         )

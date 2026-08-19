@@ -36,6 +36,16 @@ def test_resolve_teams_handles_missing_team_name_and_avatar():
     assert teams[0]["avatar_url"] is None
 
 
+def test_resolve_teams_normalizes_empty_strings_to_none():
+    rosters = [{"roster_id": 4, "owner_id": "user4"}]
+    users = [{"user_id": "user4", "display_name": "", "avatar": None, "metadata": {"team_name": ""}}]
+
+    teams = sync_teams.resolve_teams(rosters, users)
+
+    assert teams[0]["display_name"] is None
+    assert teams[0]["team_name"] is None
+
+
 def test_resolve_teams_handles_roster_with_no_owner():
     rosters = [{"roster_id": 3, "owner_id": None}]
 
