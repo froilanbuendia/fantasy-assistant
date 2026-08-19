@@ -54,3 +54,12 @@ def get_teams(league_id: str) -> list[dict]:
         if "LastEvaluatedKey" not in response:
             return teams
         query_kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
+
+
+def get_draft_slots(league_id: str, draft_id: str) -> dict:
+    """Fixed slot->roster_id mapping for this draft (unaffected by pick
+    trades — see fantasy_ingestion.storage.put_draft_slots)."""
+    table = _get_table()
+    response = table.get_item(Key={"PK": f"LEAGUE#{league_id}", "SK": f"DRAFT#{draft_id}#SLOTS"})
+    item = response.get("Item")
+    return item["slot_to_roster_id"] if item else {}

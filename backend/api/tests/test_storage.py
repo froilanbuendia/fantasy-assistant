@@ -2,13 +2,19 @@ from fantasy_api import storage
 
 
 class _FakeTable:
-    def __init__(self, responses):
-        self._responses = list(responses)
+    def __init__(self, responses=None, get_item_response=None):
+        self._responses = list(responses or [])
+        self._get_item_response = get_item_response
         self.queries = []
+        self.get_item_calls = []
 
     def query(self, **kwargs):
         self.queries.append(kwargs)
         return self._responses.pop(0)
+
+    def get_item(self, **kwargs):
+        self.get_item_calls.append(kwargs)
+        return self._get_item_response
 
 
 def test_get_draft_picks_paginates_through_all_pages(monkeypatch):
@@ -98,3 +104,30 @@ def test_get_teams_strips_internal_keys(monkeypatch):
     result = storage.get_teams("league1")
 
     assert result == [{"roster_id": 1, "display_name": "froilan"}]
+
+
+def test_get_draft_slots_returns_the_mapping(monkeypatch):
+    fake_table = _FakeTable(
+        get_item_response={
+            "Item": {
+                "PK": "LEAGUE#league1",
+                "SK": "DRAFT#draft1#SLOTS",
+                "slot_to_roster_id": {"1": 6, "2": 3},
+            }
+        }
+    )
+    monkeypatch.setattr(storage, "_get_table", lambda: fake_table)
+
+    result = storage.get_draft_slots("league1", "draft1")
+
+    assert result == {"1": 6, "2": 3}
+    assert fake_table.get_item_calls[0]["Key"] == {"PK": "LEAGUE#league1", "SK": "DRAFT#draft1#SLOTS"}
+
+
+def test_get_draft_slots_returns_empty_dict_when_not_stored_yet(monkeypatch):
+    fake_table = _FakeTable(get_item_response={})
+    monkeypatch.setattr(storage, "_get_table", lambda: fake_table)
+
+    result = storage.get_draft_slots("league1", "draft1")
+
+    assert result == {}

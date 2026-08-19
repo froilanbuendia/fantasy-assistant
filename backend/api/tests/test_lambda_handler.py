@@ -27,6 +27,7 @@ def test_json_default_raises_for_unsupported_type():
 def test_handler_returns_200_with_json_content_type(monkeypatch):
     monkeypatch.setattr(storage, "get_draft_picks", lambda league_id, draft_id: [])
     monkeypatch.setattr(storage, "get_teams", lambda league_id: [])
+    monkeypatch.setattr(storage, "get_draft_slots", lambda league_id, draft_id: {})
 
     response = lambda_handler.handler({}, None)
 
@@ -43,6 +44,7 @@ def test_handler_lifts_league_and_draft_id_out_of_picks(monkeypatch):
         ],
     )
     monkeypatch.setattr(storage, "get_teams", lambda league_id: [])
+    monkeypatch.setattr(storage, "get_draft_slots", lambda league_id, draft_id: {})
 
     body = json.loads(lambda_handler.handler({}, None)["body"])
 
@@ -58,6 +60,7 @@ def test_handler_lifts_league_id_out_of_teams(monkeypatch):
         "get_teams",
         lambda league_id: [{"league_id": league_id, "roster_id": 1, "display_name": "froilan"}],
     )
+    monkeypatch.setattr(storage, "get_draft_slots", lambda league_id, draft_id: {})
 
     body = json.loads(lambda_handler.handler({}, None)["body"])
 
@@ -71,7 +74,20 @@ def test_handler_serializes_decimal_pick_fields(monkeypatch):
         lambda league_id, draft_id: [{"league_id": league_id, "draft_id": draft_id, "pick_no": Decimal("1")}],
     )
     monkeypatch.setattr(storage, "get_teams", lambda league_id: [])
+    monkeypatch.setattr(storage, "get_draft_slots", lambda league_id, draft_id: {})
 
     body = json.loads(lambda_handler.handler({}, None)["body"])
 
     assert body["picks"] == [{"pick_no": 1}]
+
+
+def test_handler_includes_slot_to_roster_id_with_decimals_serialized(monkeypatch):
+    monkeypatch.setattr(storage, "get_draft_picks", lambda league_id, draft_id: [])
+    monkeypatch.setattr(storage, "get_teams", lambda league_id: [])
+    monkeypatch.setattr(
+        storage, "get_draft_slots", lambda league_id, draft_id: {"1": Decimal("6"), "2": Decimal("3")}
+    )
+
+    body = json.loads(lambda_handler.handler({}, None)["body"])
+
+    assert body["slot_to_roster_id"] == {"1": 6, "2": 3}

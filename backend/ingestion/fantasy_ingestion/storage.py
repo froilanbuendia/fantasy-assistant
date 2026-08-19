@@ -60,3 +60,15 @@ def put_team(team: dict) -> None:
         **team,
     }
     _get_table().put_item(Item=item)
+
+
+def put_draft_slots(league_id: str, draft_id: str, slot_to_roster_id: dict) -> None:
+    """Write the draft's fixed slot->roster_id mapping (from the draft
+    object, not the picks) — unaffected by pick trades, so it's the correct
+    source for "whose column is this" on the frontend's grid."""
+    item = {
+        "PK": f"LEAGUE#{league_id}",
+        "SK": f"DRAFT#{draft_id}#SLOTS",
+        "slot_to_roster_id": slot_to_roster_id,
+    }
+    _get_table().put_item(Item=item)

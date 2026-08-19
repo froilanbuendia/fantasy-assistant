@@ -19,6 +19,10 @@ def handler(event, context):
     draft = sleeper_client.get_draft(SLEEPER_DRAFT_ID)
     sync_teams.sync_teams()
 
+    slot_to_roster_id = draft.get("slot_to_roster_id")
+    if slot_to_roster_id:
+        storage.put_draft_slots(SLEEPER_LEAGUE_ID, SLEEPER_DRAFT_ID, slot_to_roster_id)
+
     if draft["status"] == "complete":
         print("Draft complete, skipping poll. Switch to roster/matchup polling (Phase 1b).")
         _disable_own_schedule()
