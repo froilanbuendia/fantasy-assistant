@@ -3,15 +3,40 @@
 import { useDraftPicks } from "@/lib/use-draft-picks";
 import { teamLabel } from "@/lib/team-label";
 import { playerImageUrl } from "@/lib/player-image";
+import { positionColorClass, POSITION_LEGEND } from "@/lib/position-colors";
 import { Avatar } from "@/components/avatar";
+import type { DraftPick, Team } from "@/lib/draft-picks";
+
+function positionInRound(round: number, slot: number, numSlots: number): number {
+  return round % 2 === 1 ? slot : numSlots - slot + 1;
+}
 
 export default function Home() {
   const { picks, teams, error, lastUpdated } = useDraftPicks();
+
+  const numSlots = teams?.length ?? 0;
   const teamsById = new Map((teams ?? []).map((team) => [team.roster_id, team]));
+
+  const slotToRosterId = new Map<number, number>();
+  const pickByRoundAndSlot = new Map<string, DraftPick>();
+  let maxRound = 0;
+  for (const pick of picks ?? []) {
+    slotToRosterId.set(pick.draft_slot, pick.roster_id);
+    pickByRoundAndSlot.set(`${pick.round}:${pick.draft_slot}`, pick);
+    maxRound = Math.max(maxRound, pick.round);
+  }
+  const rounds = Array.from({ length: Math.max(maxRound, 1) }, (_, i) => i + 1);
+  const slots = Array.from({ length: numSlots }, (_, i) => i + 1);
+
+  function columnHeader(slot: number): { label: string; team: Team | undefined } {
+    const rosterId = slotToRosterId.get(slot);
+    const team = rosterId !== undefined ? teamsById.get(rosterId) : undefined;
+    return { label: team ? teamLabel(team, rosterId!) : `Slot ${slot}`, team };
+  }
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
+      <main className="flex w-full flex-1 flex-col gap-6 px-6 py-12">
         <header className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
             Draft Board
@@ -27,7 +52,7 @@ export default function Home() {
           </p>
         )}
 
-        {picks === null && !error && (
+        {(picks === null || teams === null) && !error && (
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading picks…</p>
         )}
 
@@ -37,42 +62,75 @@ export default function Home() {
           </p>
         )}
 
-        {picks !== null && picks.length > 0 && (
-          <ol className="flex flex-col gap-2">
-            {picks.map((pick) => {
-              const team = teamsById.get(pick.roster_id);
-              const label = teamLabel(team, pick.roster_id);
-              const playerLabel = pick.player_name ?? "Unknown player";
-              return (
-                <li
-                  key={pick.pick_no}
-                  className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="w-10 text-right font-mono text-sm text-zinc-400">
-                      {pick.pick_no}
-                    </span>
-                    <Avatar src={playerImageUrl(pick.player_id)} label={playerLabel} size="lg" />
-                    <div className="flex flex-col">
-                      <span className="font-medium text-zinc-950 dark:text-zinc-50">
-                        {playerLabel}
-                      </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {[pick.position, pick.team].filter(Boolean).join(" · ") || "—"}
+        {picks !== null && teams !== null && picks.length > 0 && numSlots > 0 && (
+          <>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+              {POSITION_LEGEND.map((position) => (
+                <span key={position} className="flex items-center gap-1.5">
+                  <span
+                    className={`h-2.5 w-2.5 rounded-sm border-l-2 ${positionColorClass(position === "Other" ? null : position)}`}
+                  />
+                  {position}
+                </span>
+              ))}
+            </div>
+
+            <div className="overflow-x-auto">
+              <div
+                className="grid gap-2"
+                style={{ gridTemplateColumns: `repeat(${numSlots}, minmax(150px, 1fr))` }}
+              >
+                {slots.map((slot) => {
+                  const { label, team } = columnHeader(slot);
+                  return (
+                    <div key={`head-${slot}`} className="flex flex-col items-center gap-1 pb-1 text-center">
+                      <Avatar src={team?.avatar_url ?? null} label={label} />
+                      <span className="truncate text-xs font-medium text-zinc-950 dark:text-zinc-50">
+                        {label}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col items-end text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>Round {pick.round}</span>
-                      <span>{label}</span>
-                    </div>
-                    <Avatar src={team?.avatar_url ?? null} label={label} />
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                  );
+                })}
+
+                {rounds.map((round) =>
+                  slots.map((slot) => {
+                    const pick = pickByRoundAndSlot.get(`${round}:${slot}`);
+                    if (!pick) {
+                      return (
+                        <div
+                          key={`${round}-${slot}`}
+                          className="flex flex-col justify-center gap-1 rounded-md border border-dashed border-zinc-200 p-2 text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-600"
+                        >
+                          {round}.{positionInRound(round, slot, numSlots)}
+                        </div>
+                      );
+                    }
+                    const playerLabel = pick.player_name ?? "Unknown player";
+                    const pickInRound = ((pick.pick_no - 1) % numSlots) + 1;
+                    return (
+                      <div
+                        key={`${round}-${slot}`}
+                        className={`flex flex-col gap-1 rounded-md border-l-4 p-2 ${positionColorClass(pick.position)}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Avatar src={playerImageUrl(pick.player_id)} label={playerLabel} size="sm" />
+                          <span className="truncate text-xs font-medium text-zinc-950 dark:text-zinc-50">
+                            {playerLabel}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                          {[pick.position, pick.team].filter(Boolean).join(" · ") || "—"}
+                        </span>
+                        <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                          {round}.{pickInRound}
+                        </span>
+                      </div>
+                    );
+                  }),
+                )}
+              </div>
+            </div>
+          </>
         )}
       </main>
     </div>

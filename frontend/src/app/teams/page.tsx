@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useDraftPicks } from "@/lib/use-draft-picks";
-import { slotNoteFor, POSITION_ORDER } from "@/lib/roster-slots";
+import { POSITION_ORDER } from "@/lib/roster-slots";
 import { teamLabel } from "@/lib/team-label";
 import { playerImageUrl } from "@/lib/player-image";
+import { positionColorClass } from "@/lib/position-colors";
 import { Avatar } from "@/components/avatar";
 import type { DraftPick } from "@/lib/draft-picks";
 
@@ -39,11 +41,15 @@ function groupByPosition(picks: DraftPick[]): Map<string, DraftPick[]> {
 export default function Teams() {
   const { picks, teams, error, lastUpdated } = useDraftPicks();
   const picksByRoster = picks ? groupByRosterId(picks) : null;
+  const [selectedRosterId, setSelectedRosterId] = useState<number | "all">("all");
+
+  const visibleTeams =
+    teams === null ? null : selectedRosterId === "all" ? teams : teams.filter((team) => team.roster_id === selectedRosterId);
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
-        <header className="flex flex-col gap-1">
+        <header className="flex flex-col gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
             Teams
           </h1>
@@ -52,6 +58,22 @@ export default function Teams() {
             by drafted position, not an assigned starting lineup — the draft alone doesn&apos;t say
             who each manager will start.
           </p>
+          {teams !== null && teams.length > 0 && (
+            <select
+              value={selectedRosterId}
+              onChange={(e) =>
+                setSelectedRosterId(e.target.value === "all" ? "all" : Number(e.target.value))
+              }
+              className="w-fit rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50"
+            >
+              <option value="all">All teams</option>
+              {teams.map((team) => (
+                <option key={team.roster_id} value={team.roster_id}>
+                  {teamLabel(team, team.roster_id)}
+                </option>
+              ))}
+            </select>
+          )}
         </header>
 
         {error && (
@@ -68,9 +90,15 @@ export default function Teams() {
           <p className="text-sm text-zinc-500 dark:text-zinc-400">No teams found.</p>
         )}
 
-        {teams !== null && picksByRoster !== null && teams.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {teams.map((team) => {
+        {visibleTeams !== null && picksByRoster !== null && visibleTeams.length > 0 && (
+          <div
+            className={
+              selectedRosterId === "all"
+                ? "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                : "grid max-w-md grid-cols-1 gap-4"
+            }
+          >
+            {visibleTeams.map((team) => {
               const label = teamLabel(team, team.roster_id);
               const teamPicks = picksByRoster.get(team.roster_id) ?? [];
               return (
@@ -88,8 +116,11 @@ export default function Teams() {
                     <div className="flex flex-col gap-3">
                       {[...groupByPosition(teamPicks).entries()].map(([position, positionPicks]) => (
                         <div key={position} className="flex flex-col gap-1">
-                          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                            {position} · {positionPicks.length} drafted ({slotNoteFor(position)})
+                          <p className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            <span
+                              className={`h-2.5 w-2.5 rounded-sm border-l-2 ${positionColorClass(position === "Unknown" ? null : position)}`}
+                            />
+                            {position}
                           </p>
                           <ul className="flex flex-col gap-1">
                             {positionPicks.map((pick) => {
