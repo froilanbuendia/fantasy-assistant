@@ -7,9 +7,9 @@ fantasy-dashboard/
 ├── CLAUDE.md
 ├── backend/
 │   ├── ingestion/     # Sleeper API calls + DynamoDB writes; also the Lambda's own code (Phase 1a, deployed)
-│   ├── api/            # Lambda handlers serving data to the frontend (later)
-│   └── infra/           # CDK stack — Lambda + EventBridge schedule, deployed (Phase 1a)
-└── frontend/              # Next.js app (later, not yet scaffolded)
+│   ├── api/            # Lambda handlers serving data to the frontend (Phase 1a, deployed)
+│   └── infra/           # CDK stacks — DraftPollerStack (Lambda + EventBridge) and DraftApiStack (Lambda + Function URL), deployed (Phase 1a)
+└── frontend/              # Next.js app — draft board + teams views (Phase 1a, live)
 ```
 
 ## Commands
@@ -70,7 +70,7 @@ the architecture pattern from his existing **Roster Fit Analyzer** project
 
 ## Phased build plan
 
-1. **Phase 1a (current, build this first):** Sleeper **draft** ingestion.
+1. **Phase 1a (done):** Sleeper **draft** ingestion.
    The dynasty league's startup draft is live right now — rosters are empty
    until it completes, but `/draft/{draft_id}/picks` is populated and
    updates pick-by-pick. This is the actual first buildable target:
@@ -84,7 +84,7 @@ the architecture pattern from his existing **Roster Fit Analyzer** project
      end to end before any roster/season logic exists
    - All ingestion code lives under `backend/ingestion/` (e.g.
      `backend/ingestion/sleeper_client.py`), separate from `backend/api/`
-     (data-serving Lambdas) and `backend/infra/` (CDK stack) once those exist
+     (data-serving Lambdas) and `backend/infra/` (CDK stacks)
 2. **Phase 1b:** Once the draft completes, switch primary polling to
    `/league/{league_id}/rosters` and build out the full season dashboard
    (matchups, projections, trends) described below.
