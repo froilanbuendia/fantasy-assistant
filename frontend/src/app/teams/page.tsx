@@ -92,32 +92,34 @@ export default function Teams() {
                             />
                             {position}
                           </p>
-                          <ul className="flex flex-col gap-1">
-                            {positionPicks.map((pick) => {
-                              const playerLabel = pick.player_name ?? "Unknown player";
-                              return (
-                                <li
-                                  key={pick.pick_no}
-                                  className="flex items-center gap-2 text-sm text-zinc-950 dark:text-zinc-50"
-                                >
-                                  <Avatar
-                                    src={playerImageUrl(pick.player_id)}
-                                    label={playerLabel}
-                                    size="sm"
-                                  />
-                                  <span>
-                                    {playerLabel}
-                                    {pick.team && (
-                                      <span className="text-zinc-500 dark:text-zinc-400">
-                                        {" "}
-                                        · {pick.team}
-                                      </span>
-                                    )}
-                                  </span>
-                                </li>
-                              );
-                            })}
-                          </ul>
+                          {positionPicks.length > 0 && (
+                            <ul className="flex flex-col gap-1">
+                              {positionPicks.map((pick) => {
+                                const playerLabel = pick.player_name ?? "Unknown player";
+                                return (
+                                  <li
+                                    key={pick.pick_no}
+                                    className="flex items-center gap-2 text-sm text-zinc-950 dark:text-zinc-50"
+                                  >
+                                    <Avatar
+                                      src={playerImageUrl(pick.player_id)}
+                                      label={playerLabel}
+                                      size="sm"
+                                    />
+                                    <span>
+                                      {playerLabel}
+                                      {pick.team && (
+                                        <span className="text-zinc-500 dark:text-zinc-400">
+                                          {" "}
+                                          · {pick.team}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
                         </div>
                       ))}
                     </div>

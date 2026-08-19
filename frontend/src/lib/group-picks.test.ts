@@ -36,14 +36,18 @@ describe("groupByRosterId", () => {
 });
 
 describe("groupByPosition", () => {
-  it("orders known positions QB, RB, WR, TE, K regardless of input order", () => {
+  it("always includes every roster position, in order, even with zero picks", () => {
     const picks = [
       { ...BASE_PICK, pick_no: 1, position: "K" },
       { ...BASE_PICK, pick_no: 2, position: "WR" },
       { ...BASE_PICK, pick_no: 3, position: "QB" },
     ];
 
-    expect([...groupByPosition(picks).keys()]).toEqual(["QB", "WR", "K"]);
+    const grouped = groupByPosition(picks);
+
+    expect([...grouped.keys()]).toEqual(["QB", "RB", "WR", "TE", "K"]);
+    expect(grouped.get("TE")).toEqual([]);
+    expect(grouped.get("RB")).toEqual([]);
   });
 
   it("buckets a null position as Unknown and sorts it after known positions", () => {
@@ -52,6 +56,12 @@ describe("groupByPosition", () => {
       { ...BASE_PICK, pick_no: 2, position: "QB" },
     ];
 
-    expect([...groupByPosition(picks).keys()]).toEqual(["QB", "Unknown"]);
+    expect([...groupByPosition(picks).keys()]).toEqual(["QB", "RB", "WR", "TE", "K", "Unknown"]);
+  });
+
+  it("does not add an Unknown bucket when every pick has a known position", () => {
+    const picks = [{ ...BASE_PICK, pick_no: 1, position: "QB" }];
+
+    expect([...groupByPosition(picks).keys()]).not.toContain("Unknown");
   });
 });
