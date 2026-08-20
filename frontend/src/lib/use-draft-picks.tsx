@@ -1,11 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { getDraftPicks, type DraftPick, type Team } from "@/lib/draft-picks";
 
 const POLL_INTERVAL_MS = 30_000;
 
-export function useDraftPicks() {
+type DraftPicksState = {
+  picks: DraftPick[] | null;
+  teams: Team[] | null;
+  slotToRosterId: Record<string, number> | null;
+  leagueName: string | null;
+  error: string | null;
+  lastUpdated: Date | null;
+};
+
+const DraftPicksContext = createContext<DraftPicksState | null>(null);
+
+// Polls once here, at the layout level — living above both routed pages
+// means it isn't unmounted (and doesn't restart from "loading") every time
+// the user switches between Draft Board and Teams.
+export function DraftPicksProvider({ children }: { children: ReactNode }) {
   const [picks, setPicks] = useState<DraftPick[] | null>(null);
   const [teams, setTeams] = useState<Team[] | null>(null);
   const [slotToRosterId, setSlotToRosterId] = useState<Record<string, number> | null>(null);
@@ -43,5 +57,17 @@ export function useDraftPicks() {
     };
   }, []);
 
-  return { picks, teams, slotToRosterId, leagueName, error, lastUpdated };
+  return (
+    <DraftPicksContext.Provider value={{ picks, teams, slotToRosterId, leagueName, error, lastUpdated }}>
+      {children}
+    </DraftPicksContext.Provider>
+  );
+}
+
+export function useDraftPicks(): DraftPicksState {
+  const context = useContext(DraftPicksContext);
+  if (!context) {
+    throw new Error("useDraftPicks must be used within a DraftPicksProvider");
+  }
+  return context;
 }
