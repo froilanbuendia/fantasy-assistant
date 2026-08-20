@@ -61,7 +61,7 @@ export default function Home() {
         isLive={false}
       />
       <main className="flex w-full flex-1 flex-col gap-6 px-6 py-12">
-        <header className="flex flex-col gap-1">
+        <header className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
             Draft Board
           </h1>
@@ -88,7 +88,7 @@ export default function Home() {
 
         {picks !== null && teams !== null && slotToRosterId !== null && picks.length > 0 && numSlots > 0 && (
           <>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
               {POSITION_LEGEND.map((position) => (
                 <span key={position} className="flex items-center gap-1.5">
                   <span
