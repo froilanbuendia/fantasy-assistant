@@ -72,3 +72,14 @@ def put_draft_slots(league_id: str, draft_id: str, slot_to_roster_id: dict) -> N
         "slot_to_roster_id": slot_to_roster_id,
     }
     _get_table().put_item(Item=item)
+
+
+def put_league_meta(league_id: str, name: str) -> None:
+    """Write the league's own static info (currently just its display name)
+    as a META item under the league's partition."""
+    item = {
+        "PK": f"LEAGUE#{league_id}",
+        "SK": "META",
+        "name": name,
+    }
+    _get_table().put_item(Item=item)

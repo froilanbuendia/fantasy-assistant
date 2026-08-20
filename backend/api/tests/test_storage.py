@@ -131,3 +131,24 @@ def test_get_draft_slots_returns_empty_dict_when_not_stored_yet(monkeypatch):
     result = storage.get_draft_slots("league1", "draft1")
 
     assert result == {}
+
+
+def test_get_league_name_returns_the_name(monkeypatch):
+    fake_table = _FakeTable(
+        get_item_response={"Item": {"PK": "LEAGUE#league1", "SK": "META", "name": "Unnamed Dynasty League"}}
+    )
+    monkeypatch.setattr(storage, "_get_table", lambda: fake_table)
+
+    result = storage.get_league_name("league1")
+
+    assert result == "Unnamed Dynasty League"
+    assert fake_table.get_item_calls[0]["Key"] == {"PK": "LEAGUE#league1", "SK": "META"}
+
+
+def test_get_league_name_returns_none_when_not_stored_yet(monkeypatch):
+    fake_table = _FakeTable(get_item_response={})
+    monkeypatch.setattr(storage, "_get_table", lambda: fake_table)
+
+    result = storage.get_league_name("league1")
+
+    assert result is None

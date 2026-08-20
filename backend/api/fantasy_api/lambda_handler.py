@@ -15,6 +15,7 @@ def handler(event, context):
     picks = storage.get_draft_picks(SLEEPER_LEAGUE_ID, SLEEPER_DRAFT_ID)
     teams = storage.get_teams(SLEEPER_LEAGUE_ID)
     slot_to_roster_id = storage.get_draft_slots(SLEEPER_LEAGUE_ID, SLEEPER_DRAFT_ID)
+    league_name = storage.get_league_name(SLEEPER_LEAGUE_ID)
 
     # league_id/draft_id are identical on every pick (this endpoint only ever
     # serves one draft) — lift them out once instead of repeating per pick.
@@ -23,6 +24,7 @@ def handler(event, context):
 
     body = {
         "league_id": SLEEPER_LEAGUE_ID,
+        "league_name": league_name,
         "draft_id": SLEEPER_DRAFT_ID,
         "teams": teams,
         "picks": picks,

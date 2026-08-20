@@ -23,6 +23,10 @@ def handler(event, context):
     if slot_to_roster_id:
         storage.put_draft_slots(SLEEPER_LEAGUE_ID, SLEEPER_DRAFT_ID, slot_to_roster_id)
 
+    league = sleeper_client.get_league(SLEEPER_LEAGUE_ID)
+    if league.get("name"):
+        storage.put_league_meta(SLEEPER_LEAGUE_ID, league["name"])
+
     if draft["status"] == "complete":
         print("Draft complete, skipping poll. Switch to roster/matchup polling (Phase 1b).")
         _disable_own_schedule()

@@ -63,3 +63,11 @@ def get_draft_slots(league_id: str, draft_id: str) -> dict:
     response = table.get_item(Key={"PK": f"LEAGUE#{league_id}", "SK": f"DRAFT#{draft_id}#SLOTS"})
     item = response.get("Item")
     return item["slot_to_roster_id"] if item else {}
+
+
+def get_league_name(league_id: str) -> str | None:
+    """This league's display name (from its own META item)."""
+    table = _get_table()
+    response = table.get_item(Key={"PK": f"LEAGUE#{league_id}", "SK": "META"})
+    item = response.get("Item")
+    return item["name"] if item else None
