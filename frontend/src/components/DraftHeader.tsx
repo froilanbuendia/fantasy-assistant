@@ -18,8 +18,8 @@ export function DraftHeader({
   isLive: boolean;
 }) {
   return (
-    <div className="flex w-full flex-row items-center justify-between bg-[#0F1729] px-5 py-4">
-      <div className="flex items-center gap-3">
+    <div className="grid w-full grid-cols-3 items-center bg-[#0F1729] px-5 py-4">
+      <div className="flex items-center justify-self-start gap-3">
         <span className="text-[16px] font-medium text-white">{title}</span>
         {isLive && (
           <span className="flex items-center gap-1.5 rounded-full bg-green-500/15 px-2.5 py-1 font-mono text-[11px] text-green-400">
@@ -29,7 +29,7 @@ export function DraftHeader({
         )}
       </div>
 
-      <div className="flex items-center gap-1 rounded-full bg-white/10 p-[3px]">
+      <div className="flex items-center justify-self-center gap-1 rounded-full bg-white/10 p-[3px]">
         <button
           type="button"
           onClick={() => onChange("draft")}
@@ -54,7 +54,7 @@ export function DraftHeader({
         </button>
       </div>
 
-      <span className="font-mono text-[12px] text-slate-400">
+      <span className="justify-self-end font-mono text-[12px] text-slate-400">
         round {round} · pick {pick}
       </span>
     </div>
