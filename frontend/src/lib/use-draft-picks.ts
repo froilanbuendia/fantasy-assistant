@@ -9,6 +9,7 @@ export function useDraftPicks() {
   const [picks, setPicks] = useState<DraftPick[] | null>(null);
   const [teams, setTeams] = useState<Team[] | null>(null);
   const [slotToRosterId, setSlotToRosterId] = useState<Record<string, number> | null>(null);
+  const [leagueName, setLeagueName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -25,6 +26,7 @@ export function useDraftPicks() {
         setPicks(data.picks ?? []);
         setTeams(data.teams ?? []);
         setSlotToRosterId(data.slot_to_roster_id ?? {});
+        setLeagueName(data.league_name ?? null);
         setError(null);
         setLastUpdated(new Date());
       } catch (err) {
@@ -41,5 +43,5 @@ export function useDraftPicks() {
     };
   }, []);
 
-  return { picks, teams, slotToRosterId, error, lastUpdated };
+  return { picks, teams, slotToRosterId, leagueName, error, lastUpdated };
 }

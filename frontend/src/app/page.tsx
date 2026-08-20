@@ -6,25 +6,21 @@ import { teamLabel } from "@/lib/team-label";
 import { playerImageUrl } from "@/lib/player-image";
 import { positionColorClass, POSITION_LEGEND } from "@/lib/position-colors";
 import { positionInRound, isTradedPick } from "@/lib/draft-order";
+import { currentDraftPosition } from "@/lib/draft-position";
 import { Avatar } from "@/components/avatar";
 import { DraftHeader } from "@/components/DraftHeader";
 import type { DraftPick, Team } from "@/lib/draft-picks";
 
 export default function Home() {
   const router = useRouter();
-  const { picks, teams, slotToRosterId, error, lastUpdated } = useDraftPicks();
+  const { picks, teams, slotToRosterId, leagueName, error, lastUpdated } = useDraftPicks();
 
   const numSlots = Object.keys(slotToRosterId ?? {}).length;
   const teamsById = new Map((teams ?? []).map((team) => [team.roster_id, team]));
 
-  // "Next pick" = current draft position (who's on the clock), derived from
-  // the highest pick_no seen so far — nothing in the API response says
-  // whether the draft is still active, so isLive is left unwired below
-  // rather than guessed from this.
-  const maxPickNo = (picks ?? []).reduce((max, p) => Math.max(max, p.pick_no), 0);
-  const nextPickNo = maxPickNo + 1;
-  const currentRound = numSlots > 0 ? Math.ceil(nextPickNo / numSlots) : 1;
-  const currentPickInRound = numSlots > 0 ? ((nextPickNo - 1) % numSlots) + 1 : 1;
+  // Nothing in the API response says whether the draft is still active, so
+  // isLive is left unwired below rather than guessed from a proxy.
+  const { round: currentRound, pick: currentPickInRound } = currentDraftPosition(picks ?? [], numSlots);
 
   function handleHeaderTabChange(tab: "draft" | "teams") {
     if (tab === "teams") {
@@ -57,6 +53,7 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
       <DraftHeader
+        title={leagueName ?? "Dynasty Draft"}
         active="draft"
         onChange={handleHeaderTabChange}
         round={currentRound}

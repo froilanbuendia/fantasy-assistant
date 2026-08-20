@@ -1,23 +1,44 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDraftPicks } from "@/lib/use-draft-picks";
 import { teamLabel } from "@/lib/team-label";
 import { playerImageUrl } from "@/lib/player-image";
 import { positionColorClass } from "@/lib/position-colors";
 import { groupByRosterId, groupByPosition } from "@/lib/group-picks";
+import { currentDraftPosition } from "@/lib/draft-position";
 import { Avatar } from "@/components/avatar";
+import { DraftHeader } from "@/components/DraftHeader";
 
 export default function Teams() {
-  const { picks, teams, error, lastUpdated } = useDraftPicks();
+  const router = useRouter();
+  const { picks, teams, slotToRosterId, leagueName, error, lastUpdated } = useDraftPicks();
   const picksByRoster = picks ? groupByRosterId(picks) : null;
   const [selectedRosterId, setSelectedRosterId] = useState<number | "all">("all");
 
   const visibleTeams =
     teams === null ? null : selectedRosterId === "all" ? teams : teams.filter((team) => team.roster_id === selectedRosterId);
 
+  const numSlots = Object.keys(slotToRosterId ?? {}).length;
+  const { round: currentRound, pick: currentPickInRound } = currentDraftPosition(picks ?? [], numSlots);
+
+  function handleHeaderTabChange(tab: "draft" | "teams") {
+    if (tab === "draft") {
+      router.push("/");
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 dark:bg-black">
+      <DraftHeader
+        title={leagueName ?? "Dynasty Draft"}
+        active="teams"
+        onChange={handleHeaderTabChange}
+        round={currentRound}
+        pick={currentPickInRound}
+        isLive={false}
+      />
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-12">
         <header className="flex flex-col gap-3">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">

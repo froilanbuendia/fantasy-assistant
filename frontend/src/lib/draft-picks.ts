@@ -21,6 +21,7 @@ export type Team = {
 
 export type DraftPicksResponse = {
   league_id: string;
+  league_name: string | null;
   draft_id: string;
   teams: Team[];
   picks: DraftPick[];
